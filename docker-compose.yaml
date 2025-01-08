@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    environment:
+      BASE_URL: "/swagger"
+      URLS: >
+        [
+          { url: "http://localhost:5173/swagger/openapi/identity.yaml", name: "Identity Service" },
+        ]
+    ports:
+      - "5173:8080"
+    volumes:
+      - "./openapi:/usr/share/nginx/html/openapi"
