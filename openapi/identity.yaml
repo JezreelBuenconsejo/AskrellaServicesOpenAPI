@@ -4,10 +4,10 @@ info:
   description: API for managing authentication, authorization, and user identity within Askrella services.
   version: 1.0.0
 servers:
-  - url: https://identity.askrella.agency/v1
-    description: Production Server
   - url: https://identity.service.askrella.dev/v1
     description: Development Server
+  - url: https://identity.askrella.agency/v1
+    description: Production Server
 
 paths:
   /realm/{realm}/user:
