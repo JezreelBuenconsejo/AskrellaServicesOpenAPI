@@ -1,0 +1,990 @@
+openapi: 3.0.3
+info:
+  title: Identity Service API
+  description: API for managing authentication, authorization, and user identity within Askrella services.
+  version: 1.0.0
+servers:
+  - url: https://identity.service.askrella.dev/v1
+    description: Development Server
+  - url: https://identity.askrella.agency/v1
+    description: Production Server
+
+paths:
+  /realm/{realm}/user:
+    post:
+      tags:
+        - User Realm
+      summary: Create a new user in the realm
+      description: Creates a new user in the specified realm. No authentication is required for this endpoint.
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm where the user is being created.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRealmUserRequest'
+      responses:
+        '200':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreationResponse'
+        '400':
+          description: Invalid input
+        '500':
+          description: Internal server error
+
+  /user/me:
+    get:
+      tags:
+        - User Routes
+      summary: Get the current user's details
+      description: Retrieves the details of the currently authenticated user. Requires authentication.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid user ID
+        '403':
+          description: Forbidden - Token verification failed
+        '500':
+          description: Internal server error
+
+  /user/me/check:
+    post:
+      tags:
+        - User Routes
+      summary: Check user permissions
+      description: Validates whether the authenticated user has a specific permission in a given organization. Requires authentication and user context.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckPermissionRequest'
+      responses:
+        '200':
+          description: Permission check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  granted:
+                    type: boolean
+                    description: Indicates whether the user has the specified permission.
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden - User not found or lacks permission
+
+  /realm/{realm}/user/{user_id}:
+    patch:
+      tags:
+        - User Routes
+      summary: Update a user in the realm
+      description: Updates a user within the specified realm. Requires authentication and user permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm where the user is being updated.
+          schema:
+            type: string
+        - name: user_id
+          in: path
+          required: true
+          description: The ID of the user being updated.
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRealmUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Success message.
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden - Insufficient permissions
+        '500':
+          description: Internal server error
+          
+  /user:
+    get:
+      tags:
+        - User Routes
+      summary: List all users
+      description: Retrieves a list of all users. Requires authentication and specific permissions.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context
+        '500':
+          description: Internal server error
+  /user/{user_id}:
+    get:
+      tags:
+        - User Routes
+      summary: Get user by ID
+      description: Retrieves details of a specific user by their ID. Requires authentication and specific permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The unique ID of the user to retrieve.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid user ID
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context
+        '500':
+          description: Internal server error
+    delete:
+      tags:
+        - User Routes
+      summary: Delete a user by ID
+      description: Deletes a specific user by their ID. Requires authentication and specific permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The unique ID of the user to delete.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: User deleted successfully
+        '400':
+          description: Invalid user ID
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context
+        '500':
+          description: Internal server error
+  /organization:
+    post:
+      tags:
+        - Organization Routes
+      summary: Create a new organization
+      description: Creates a new organization within the specified realm. Requires authentication and specific permissions.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganizationRequest'
+      responses:
+        '201':
+          description: Organization created successfully
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden - Insufficient permissions or user not foundin   context
+        '409':
+          description: Conflict - Organization already exists
+        '500':
+          description: Internal server error
+    get:
+      tags:
+        - Organization Routes
+      summary: List all organizations
+      description: Retrieves a list of all organizations. Requires authentication and specific permissions.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context
+        '500':
+          description: Internal server error
+  /realm/{realm}/organization/{organization_id}:
+    get:
+      tags:
+        - Organization Routes
+      summary: Get organization details
+      description: Retrieves details of a specific organization by its ID in a given realm. Requires authentication and specific permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm to which the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization to retrieve.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          description: Invalid organization ID
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context
+        '500':
+          description: Internal server error
+    delete:
+      tags:
+        - Organization Routes
+      summary: Delete an organization
+      description: Deletes a specific organization by its ID in a given realm. Requires authentication and specific permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm to which the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization to delete.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Organization deleted successfully
+        '400':
+          description: Invalid organization ID
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context
+        '500':
+          description: Internal server error
+  /realm/{realm}/organization/{organization_id}/role:
+    get:
+      tags:
+        - Role Routes
+      summary: List all roles in an organization
+      description: Retrieves a list of all roles associated with a specific organization in a given realm. Requires authentication and appropriate permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm to which the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context
+        '400':
+          description: Invalid organization ID
+        '500':
+          description: Internal server error
+    post:
+      tags:
+        - Role Routes
+      summary: Create a new role in an organization
+      description: Creates a new role within a specific organization in a given realm. Requires authentication and appropriate permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm to which the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization where the role is created.
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleRequest'
+      responses:
+        '201':
+          description: Role created successfully
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context
+        '500':
+          description: Internal server error
+  /realm/{realm}/organization/{organization_id}/role/{role_name}:
+    delete:
+      tags:
+        - Role Routes
+      summary: Delete a role from an organization
+      description: Deletes a specified role from an organization in a given realm. Requires authentication and appropriate permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm to which the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization where the role exists.
+          schema:
+            type: string
+            format: uuid
+        - name: role_name
+          in: path
+          required: true
+          description: The unique name of the role to delete.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Role deleted successfully
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context
+        '404':
+          description: Role not found in the specified organization
+        '500':
+          description: Internal server error
+  /realm/{realm}/organization/{organization_id}/member:
+    get:
+      tags:
+        - Member Routes
+      summary: List all members of an organization
+      description: Retrieves a list of all members in the specified organization within a given realm. Requires authentication and appropriate permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm to which the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization.
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          required: false
+          description: Filter members by their user types.
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Member'
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context
+        '500':
+          description: Internal server error
+    post:
+      tags:
+        - Member Routes
+      summary: Add a member to an organization
+      description: Adds a user as a member to the specified organization in a given   realm. Requires authentication and appropriate permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm to which the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization.
+          schema:
+            type: string
+            format: uuid
+        - name: user_id
+          in: query
+          required: true
+          description: The unique ID of the user to add as a member.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Member added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateMemberResponse'
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in   context
+        '500':
+          description: Internal server error
+    delete:
+      tags:
+        - Member Routes
+      summary: Remove a member from an organization
+      description: Removes a user from the specified organization in a given realm.   Requires authentication and appropriate permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm to which the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization.
+          schema:
+            type: string
+            format: uuid
+        - name: user_id
+          in: query
+          required: true
+          description: The unique ID of the user to be removed.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Member removed successfully
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in   context
+        '500':
+          description: Internal server error
+  /realm/{realm}/organization/{organization_id}/member/{member_id}:
+    get:
+      tags:
+        - Member Routes
+      summary: Get details of a specific member in an organization
+      description: Retrieves details of a specific member within an organization in   a given realm. Requires authentication and appropriate permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm to which the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization.
+          schema:
+            type: string
+            format: uuid
+        - name: member_id
+          in: path
+          required: true
+          description: The unique ID of the member to retrieve.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in   context
+        '500':
+          description: Internal server error
+  /realm/{realm}/organization/{organization_id}/member/{member_id}/role/{role_name}:
+    post:
+      tags:
+        - Member Routes
+      summary: Assign a role to a member in an organization
+      description: Assigns a specified role to a member within an organization in a   given realm. Requires authentication and appropriate permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm to which the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization.
+          schema:
+            type: string
+            format: uuid
+        - name: member_id
+          in: path
+          required: true
+          description: The unique ID of the member.
+          schema:
+            type: string
+            format: uuid
+        - name: role_name
+          in: path
+          required: true
+          description: The name of the role to assign to the member.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Role assigned successfully
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in   context
+        '500':
+          description: Internal server error
+    delete:
+      tags:
+        - Member Routes
+      summary: Remove a role from a member in an organization
+      description: Removes a specified role from a member within an organization in   a given realm. Requires authentication and appropriate permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm to which the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization.
+          schema:
+            type: string
+            format: uuid
+        - name: member_id
+          in: path
+          required: true
+          description: The unique ID of the member.
+          schema:
+            type: string
+            format: uuid
+        - name: role_name
+          in: path
+          required: true
+          description: The name of the role to remove from the member.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Role removed successfully
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in   context
+        '500':
+          description: Internal server error
+  /realm/{realm}/organization/{organization_id}/role/{role_name}/permission/{permission}:
+    post:
+      tags:
+        - Permission Routes
+      summary: Assign a permission to a role
+      description: Assigns a specific permission to a role within an organization in a given realm. Requires authentication and sufficient permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm where the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization.
+          schema:
+            type: string
+            format: uuid
+        - name: role_name
+          in: path
+          required: true
+          description: The name of the role to which the permission is added.
+          schema:
+            type: string
+        - name: permission
+          in: path
+          required: true
+          description: The specific permission to assign to the role.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Permission successfully assigned to the role.
+        '400':
+          description: Invalid input (e.g., malformed IDs).
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context.
+        '404':
+          description: Role or organization not found in the specified realm.
+        '500':
+          description: Internal server error.
+    delete:
+      tags:
+        - Permission Routes
+      summary: Remove a permission from a role
+      description: Removes a specific permission from a role within an organization in a given realm. Requires authentication and sufficient permissions.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: realm
+          in: path
+          required: true
+          description: The realm where the organization belongs.
+          schema:
+            type: string
+        - name: organization_id
+          in: path
+          required: true
+          description: The unique ID of the organization.
+          schema:
+            type: string
+            format: uuid
+        - name: role_name
+          in: path
+          required: true
+          description: The name of the role from which the permission is removed.
+          schema:
+            type: string
+        - name: permission
+          in: path
+          required: true
+          description: The specific permission to remove from the role.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Permission successfully removed from the role.
+        '400':
+          description: Invalid input (e.g., malformed IDs).
+        '403':
+          description: Forbidden - Insufficient permissions or user not found in context.
+        '404':
+          description: Role or organization not found in the specified realm.
+        '500':
+          description: Internal server error.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CheckPermissionRequest:
+      type: object
+      properties:
+        OrganisationId:
+          type: string
+          format: uuid
+          description: ID of the organization to check permissions for.
+        Permission:
+          type: string
+          description: The specific permission to validate.
+      required:
+        - OrganisationId
+        - Permission
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        roles:
+          type: array
+          items:
+            type: string
+    UserCreationResponse:
+      type: object
+      properties:
+        ID:
+          type: string
+          format: uuid
+    CreateRealmUserRequest:
+      type: object
+      properties:
+        Username:
+          type: string
+        Password:
+          type: string
+        Email:
+          type: string
+          format: email
+        FirstName:
+          type: string
+        LastName:
+          type: string
+        CreateUserOptions:
+          type: object
+          additionalProperties: true
+      required:
+        - Username
+        - Password
+        - Email
+        - FirstName
+        - LastName
+    UpdateRealmUserRequest:
+      type: object
+      properties:
+        Username:
+          type: string
+          description: Updated username for the user.
+        Email:
+          type: string
+          format: email
+          description: Updated email for the user.
+        FirstName:
+          type: string
+          description: Updated first name for the user.
+        LastName:
+          type: string
+          description: Updated last name for the user.
+        Tag:
+          type: string
+          description: Updated tag for the user.
+      required:
+        - Username
+        - Email
+        - FirstName
+        - LastName
+    Organization:
+      type: object
+      properties:
+        Id:
+          type: string
+          format: uuid
+          description: The unique ID of the organization.
+        LegalName:
+          type: string
+          description: The legal name of the organization.
+        DisplayName:
+          type: string
+          description: The display name of the organization.
+        Email:
+          type: string
+          format: email
+          description: The organization's email address.
+        Realm:
+          type: string
+          description: The realm where the organization belongs.
+        ParentId:
+          type: string
+          format: uuid
+          description: The ID of the parent organization, if applicable.
+        Members:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: A list of member IDs associated with the organization.
+    CreateOrganizationRequest:
+      type: object
+      properties:
+        Id:
+          type: string
+          format: uuid
+          description: The unique ID for the organization.
+        LegalName:
+          type: string
+          description: The legal name of the organization.
+        DisplayName:
+          type: string
+          description: The display name of the organization.
+        Email:
+          type: string
+          format: email
+          description: The organization's email address.
+        Realm:
+          type: string
+          description: The realm where the organization belongs.
+        ParentId:
+          type: string
+          format: uuid
+          description: The ID of the parent organization, if applicable.
+      required:
+        - Id
+        - LegalName
+        - DisplayName
+        - Email
+        - Realm
+    Role:
+      type: object
+      properties:
+        Name:
+          type: string
+          description: The name of the role.
+        DisplayName:
+          type: string
+          description: The display name of the role.
+        Permissions:
+          type: array
+          items:
+            type: string
+          description: The list of permissions associated with the role.
+        Priority:
+          type: integer
+          description: The priority of the role.
+    CreateRoleRequest:
+      type: object
+      properties:
+        Name:
+          type: string
+          description: The unique name of the role.
+        DisplayName:
+          type: string
+          description: The display name of the role.
+        Priority:
+          type: integer
+          description: The priority of the role.
+      required:
+        - Name
+        - DisplayName
+        - Priority
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The unique ID of the member.
+        name:
+          type: string
+          description: The name of the member.
+        email:
+          type: string
+          format: email
+          description: The email address of the member.
+        type:
+          type: string
+          description: The type of the member (e.g., admin, user).
+        roles:
+          type: array
+          items:
+            type: string
+          description: The list of roles assigned to the member.
+    CreateMemberResponse:
+      type: object
+      properties:
+        member_id:
+          type: string
+          format: uuid
+          description: The unique ID of the created member.
