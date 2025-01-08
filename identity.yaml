@@ -48,7 +48,7 @@ paths:
       summary: Get the current user's details
       description: Retrieves the details of the currently authenticated user. Requires authentication.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       responses:
         '200':
           description: Successful operation
@@ -70,7 +70,7 @@ paths:
       summary: Check user permissions
       description: Validates whether the authenticated user has a specific permission in a given organization. Requires authentication and user context.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -100,7 +100,7 @@ paths:
       summary: Update a user in the realm
       description: Updates a user within the specified realm. Requires authentication and user permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -146,7 +146,7 @@ paths:
       summary: List all users
       description: Retrieves a list of all users. Requires authentication and specific permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       responses:
         '200':
           description: Successful operation
@@ -167,7 +167,7 @@ paths:
       summary: Get user by ID
       description: Retrieves details of a specific user by their ID. Requires authentication and specific permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: user_id
           in: path
@@ -195,7 +195,7 @@ paths:
       summary: Delete a user by ID
       description: Deletes a specific user by their ID. Requires authentication and specific permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: user_id
           in: path
@@ -220,7 +220,7 @@ paths:
       summary: Create a new organization
       description: Creates a new organization within the specified realm. Requires authentication and specific permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -244,7 +244,7 @@ paths:
       summary: List all organizations
       description: Retrieves a list of all organizations. Requires authentication and specific permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       responses:
         '200':
           description: Successful operation
@@ -265,7 +265,7 @@ paths:
       summary: Get organization details
       description: Retrieves details of a specific organization by its ID in a given realm. Requires authentication and specific permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -299,7 +299,7 @@ paths:
       summary: Delete an organization
       description: Deletes a specific organization by its ID in a given realm. Requires authentication and specific permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -330,7 +330,7 @@ paths:
       summary: List all roles in an organization
       description: Retrieves a list of all roles associated with a specific organization in a given realm. Requires authentication and appropriate permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -366,7 +366,7 @@ paths:
       summary: Create a new role in an organization
       description: Creates a new role within a specific organization in a given realm. Requires authentication and appropriate permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -403,7 +403,7 @@ paths:
       summary: Delete a role from an organization
       description: Deletes a specified role from an organization in a given realm. Requires authentication and appropriate permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -442,7 +442,7 @@ paths:
       summary: List all members of an organization
       description: Retrieves a list of all members in the specified organization within a given realm. Requires authentication and appropriate permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -486,7 +486,7 @@ paths:
       summary: Add a member to an organization
       description: Adds a user as a member to the specified organization in a given   realm. Requires authentication and appropriate permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -527,7 +527,7 @@ paths:
       summary: Remove a member from an organization
       description: Removes a user from the specified organization in a given realm.   Requires authentication and appropriate permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -565,7 +565,7 @@ paths:
       summary: Get details of a specific member in an organization
       description: Retrieves details of a specific member within an organization in   a given realm. Requires authentication and appropriate permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -607,7 +607,7 @@ paths:
       summary: Assign a role to a member in an organization
       description: Assigns a specified role to a member within an organization in a   given realm. Requires authentication and appropriate permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -650,7 +650,7 @@ paths:
       summary: Remove a role from a member in an organization
       description: Removes a specified role from a member within an organization in   a given realm. Requires authentication and appropriate permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -694,7 +694,7 @@ paths:
       summary: Assign a permission to a role
       description: Assigns a specific permission to a role within an organization in a given realm. Requires authentication and sufficient permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -738,7 +738,7 @@ paths:
       summary: Remove a permission from a role
       description: Removes a specific permission from a role within an organization in a given realm. Requires authentication and sufficient permissions.
       security:
-        - OAuth2: []
+        - BearerAuth: []
       parameters:
         - name: realm
           in: path
@@ -778,14 +778,10 @@ paths:
           description: Internal server error.
 components:
   securitySchemes:
-    OAuth2:
-      type: oauth2
-      flows:
-        authorizationCode:
-          authorizationUrl: https://identity.askrella.agency/auth/realms/master/protocol/openid-connect/auth
-          tokenUrl: https://identity.askrella.agency/auth/realms/master/protocol/openid-connect/token
-          scopes:
-            openid: Get user details
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     CheckPermissionRequest:
       type: object
